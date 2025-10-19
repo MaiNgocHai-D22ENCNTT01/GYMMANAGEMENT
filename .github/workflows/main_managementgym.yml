@@ -1,6 +1,4 @@
-# Build and deploy ASP.NET MVC (.NET Framework) app to Azure Web App - managementgym
-
-name: Build and deploy ASP.NET MVC app to Azure Web App - managementgym
+name: Build and deploy ASP.NET app to Azure Web App - managementgym
 
 on:
   push:
@@ -15,34 +13,27 @@ jobs:
       contents: read
 
     steps:
-      - name: Checkout repository
+      - name: Checkout code
         uses: actions/checkout@v4
 
-      # Thiết lập MSBuild (dành cho ASP.NET MVC .NET Framework)
-      - name: Setup MSBuild
-        uses: microsoft/setup-msbuild@v2
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '7.0.x'
 
-      # Thiết lập NuGet
-      - name: Setup NuGet
-        uses: NuGet/setup-nuget@v2
+      - name: Restore dependencies
+        run: dotnet restore ./GYMMANAGEMENT.sln
 
-      # ✅ Khôi phục package bằng file .sln
-      - name: Restore NuGet packages
-        run: nuget restore ./GYMMANAGEMENT/GYMMANAGEMENT.sln
+      - name: Build
+        run: dotnet build ./GYMMANAGEMENT.sln --configuration Release --no-restore
 
-      # Build project bằng MSBuild
-      - name: Build with MSBuild
-        run: msbuild ./GYMMANAGEMENT/GYMMANAGEMENT.sln /p:Configuration=Release
+      - name: Publish
+        run: dotnet publish ./GYMMANAGEMENT/GYMMANAGEMENT.csproj --configuration Release --output ./publish_output
 
-      # Publish ra thư mục output (đóng gói .zip)
-      - name: Publish app
-        run: msbuild ./GYMMANAGEMENT/GYMMANAGEMENT.csproj /p:Configuration=Release /p:DeployOnBuild=true /p:WebPublishMethod=Package /p:PackageAsSingleFile=true /p:SkipInvalidConfigurations=true /p:PackageLocation="${{ github.workspace }}\\publish_output"
-
-      # Upload artifact cho bước deploy
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
         with:
-          name: webapp
+          name: dotnet-app
           path: ./publish_output
 
   deploy:
@@ -56,7 +47,7 @@ jobs:
       - name: Download artifact from build job
         uses: actions/download-artifact@v4
         with:
-          name: webapp
+          name: dotnet-app
 
       - name: Login to Azure
         uses: azure/login@v2
@@ -69,6 +60,6 @@ jobs:
         id: deploy-to-webapp
         uses: azure/webapps-deploy@v3
         with:
-          app-name: 'managementgym' # kiểm tra đúng tên App Service
+          app-name: 'managementgym'
           slot-name: 'Production'
-          package: ./publish_output/*.zip
+          package: .
