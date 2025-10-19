@@ -26,13 +26,13 @@ jobs:
         run: msbuild ./GYMMANAGEMENT.sln /p:Configuration=Release
 
       - name: Publish to folder
-        run: msbuild ./GYMMANAGEMENT/GYMMANAGEMENT.csproj /p:Configuration=Release /p:DeployOnBuild=true /p:WebPublishMethod=FileSystem /p:PublishUrl=./publish_output
+        run: msbuild ./GYMMANAGEMENT/GYMMANAGEMENT.csproj /p:Configuration=Release /p:DeployOnBuild=true /p:WebPublishMethod=FileSystem /p:PublishUrl=$(Build.ArtifactStagingDirectory)/publish_output
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: webapp
-          path: ./publish_output
+          path: $(Build.ArtifactStagingDirectory)/publish_output
 
   deploy:
     runs-on: windows-latest
@@ -42,6 +42,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: webapp
+          path: ./publish_output
 
       - name: Login to Azure
         uses: azure/login@v2
@@ -53,7 +54,6 @@ jobs:
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
         with:
-          app-name: 'managementgym'
+          app-name: 'managementgym' # Tên App Service trong Azure Portal
           slot-name: 'Production'
-          package: .
-
+          package: ./publish_output
