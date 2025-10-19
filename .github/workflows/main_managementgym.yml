@@ -65,3 +65,4 @@ jobs:
           app-name: 'managementgym' # ⚠️ kiểm tra tên App Service của bạn trong Azure
           slot-name: 'Production'
           package: .
+
