@@ -18,7 +18,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # Thiết lập MSBuild (cho ASP.NET MVC .NET Framework)
+      # Thiết lập MSBuild (dành cho ASP.NET MVC .NET Framework)
       - name: Setup MSBuild
         uses: microsoft/setup-msbuild@v2
 
@@ -26,19 +26,19 @@ jobs:
       - name: Setup NuGet
         uses: NuGet/setup-nuget@v2
 
-      # Khôi phục gói NuGet bằng file .csproj
+      # ✅ Khôi phục package bằng file .sln
       - name: Restore NuGet packages
-        run: nuget restore ./GYMMANAGEMENT/GYMMANAGEMENT.csproj
+        run: nuget restore ./GYMMANAGEMENT/GYMMANAGEMENT.sln
 
-      # Build với MSBuild
+      # Build project bằng MSBuild
       - name: Build with MSBuild
-        run: msbuild ./GYMMANAGEMENT/GYMMANAGEMENT.csproj /p:Configuration=Release
+        run: msbuild ./GYMMANAGEMENT/GYMMANAGEMENT.sln /p:Configuration=Release
 
-      # Publish ra thư mục dưới dạng file ZIP
+      # Publish ra thư mục output (đóng gói .zip)
       - name: Publish app
         run: msbuild ./GYMMANAGEMENT/GYMMANAGEMENT.csproj /p:Configuration=Release /p:DeployOnBuild=true /p:WebPublishMethod=Package /p:PackageAsSingleFile=true /p:SkipInvalidConfigurations=true /p:PackageLocation="${{ github.workspace }}\\publish_output"
 
-      # Upload artifact để deploy
+      # Upload artifact cho bước deploy
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
         with:
@@ -69,6 +69,6 @@ jobs:
         id: deploy-to-webapp
         uses: azure/webapps-deploy@v3
         with:
-          app-name: 'managementgym'
+          app-name: 'managementgym' # kiểm tra đúng tên App Service
           slot-name: 'Production'
           package: ./publish_output/*.zip
